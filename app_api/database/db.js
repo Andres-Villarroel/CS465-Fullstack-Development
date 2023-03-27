@@ -41,4 +41,5 @@ process.on('SIGTERM', () => {
     });
 });
 
-require('./models/travlr');
+//require('../../app_api/models/travlr');
+require("./models/travlr");
