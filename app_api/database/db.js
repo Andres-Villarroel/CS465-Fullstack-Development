@@ -43,3 +43,4 @@ process.on('SIGTERM', () => {
 
 //require('../../app_api/models/travlr');
 require("./models/travlr");
+require("./models/user");   //for module 7

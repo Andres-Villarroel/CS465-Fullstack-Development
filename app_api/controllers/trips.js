@@ -1,10 +1,11 @@
 const { model } = require("mongoose"); //new
 const mongoose = require('mongoose');
-const Model = mongoose.model('trips');
+const Trip = mongoose.model('trips');
+const User = mongoose.model('users');
 
 //GET: /trips - lists all the trips
 const tripsList = async(req, res) => {
-    Model.find({}).exec((err,trips) => {  //passing an error object and a list of trips
+    Trip.find({}).exec((err,trips) => {  //passing an error object and a list of trips
         if(!trips){ //if 'not trips', in other words, if trips is empty... 
             return res
             .status(404)    //...return a 'res'ponse with an http status code of 404...
@@ -20,7 +21,7 @@ const tripsList = async(req, res) => {
 };
 
 const tripsFindCode = async (req, res) => {
-    Model
+    Trip
         .find({ code: req.params.tripCode })
         .exec((err, trip) => {
             if (!trip) {
@@ -40,34 +41,39 @@ const tripsFindCode = async (req, res) => {
 
 
 const tripsAddTrip = async (req, res) => {
-    Model.create(
-    {
-        code: req.body.code,
-        name: req.body.name,
-        length: req.body.length,
-        start: req.body.start,
-        resort: req.body.resort,
-        perPerson: req.body.perPerson,
-        image: req.body.image,
-        description: req.body.description
-    },
-    (err, trip) => {
-        if (err) {
-            return res
-            .status(400)
-            .json(err);
-        } else {
-            return res
-            .status(201)
-            .json(trip);
+    getUser(req, res,
+        (req, res) => {
+    Trip.create(
+        {
+            code: req.body.code,
+            name: req.body.name,
+            length: req.body.length,
+            start: req.body.start,
+            resort: req.body.resort,
+            perPerson: req.body.perPerson,
+            image: req.body.image,
+            description: req.body.description
+        },
+        (err, trip) => {
+            if (err) {
+                return res
+                    .status(400)
+                    .json(err);
+            } else {
+                return res
+                    .status(201)
+                    .json(trip);
+            }
         }
-    }
     );
+        })
 };
 
 const tripsUpdateTrip = async (req, res) => {
     console.log(req.body);
-    Model
+    getUser(req, res,
+        (req, res) => {
+    Trip
         .findOneAndUpdate({ code: req.params.tripCode }, {
             code: req.body.code,
             name: req.body.name,
@@ -104,6 +110,31 @@ const tripsUpdateTrip = async (req, res) => {
                 .status(500) // server error
                 .json(err);
         });
+        })
+};
+
+const getUser = (req, res, callback) => {
+    if (req.payload && req.payload.email) {
+        User
+            .findOne({ email: req.payload.email})
+            .exec((err, user) => {
+                if(!user) {
+                    return res
+                    .status(404)
+                    .json({ "message": "User not found"});
+                } else if (err) {
+                    console.log(err);
+                    return res
+                    .status(404)
+                    .json(err);
+                }
+                callback(req, res, user.name);
+            });
+    }   else{
+        return res
+        .status(404)
+        .json({ "message": "User not found"});
+    }
 };
 
 module.exports = {
